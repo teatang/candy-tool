@@ -1,0 +1,48 @@
+{
+  "name": "candy-tool",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "糖果工具 (Candy Tool) - 简约酷炫的在线开发者工具集合",
+  "license": "MIT",
+  "scripts": {
+    "dev": "vite",
+    "build": "vue-tsc -b && vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@vueuse/core": "^12.7.0",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "crypto-js": "^4.2.0",
+    "js-beautify": "^1.15.4",
+    "lucide-vue-next": "^0.475.0",
+    "mermaid": "^11.4.1",
+    "pinia": "^3.0.1",
+    "reka-ui": "^2.2.0",
+    "sql-formatter": "^15.4.9",
+    "tailwind-merge": "^3.0.1",
+    "tw-animate-css": "^1.2.5",
+    "uuid": "^11.1.0",
+    "vue": "^3.5.13",
+    "vue-i18n": "^11.1.2",
+    "vue-router": "^4.5.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.0.9",
+    "@types/crypto-js": "^4.2.2",
+    "@types/js-beautify": "^1.14.3",
+    "@types/node": "^22.13.0",
+    "@vitejs/plugin-vue": "^5.2.1",
+    "@vue/test-utils": "^2.4.6",
+    "@vue/tsconfig": "^0.7.0",
+    "jsdom": "^26.0.0",
+    "tailwindcss": "^4.0.9",
+    "typescript": "^5.7.3",
+    "vite": "^6.1.1",
+    "vitest": "^3.0.7",
+    "vue-tsc": "^2.2.4"
+  }
+}

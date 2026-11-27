@@ -1,0 +1,266 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+/* 配置基于 .dark 类名的暗黑模式变体 */
+@custom-variant dark (&:is(.dark *));
+
+/* =========================================================
+ * 糖果工具 (Candy Tool) 主题设计系统
+ * 兼容 shadcn-vue CSS 变量规范，支持日间与夜间双模式平滑过渡
+ * ========================================================= */
+:root {
+  --background: oklch(0.985 0.004 285);
+  --foreground: oklch(0.165 0.024 275);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.165 0.024 275);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.165 0.024 275);
+  --primary: oklch(0.585 0.233 328);
+  --primary-foreground: oklch(0.99 0.005 328);
+  --secondary: oklch(0.955 0.015 285);
+  --secondary-foreground: oklch(0.24 0.03 275);
+  --muted: oklch(0.955 0.012 280);
+  --muted-foreground: oklch(0.49 0.028 275);
+  --accent: oklch(0.94 0.028 310);
+  --accent-foreground: oklch(0.24 0.04 310);
+  --destructive: oklch(0.577 0.245 27.325);
+  --destructive-foreground: oklch(0.985 0 0);
+  --border: oklch(0.905 0.015 280);
+  --input: oklch(0.905 0.015 280);
+  --ring: oklch(0.62 0.22 328);
+  --radius: 0.875rem;
+  --sidebar: oklch(0.99 0.006 290);
+  --sidebar-foreground: oklch(0.2 0.025 275);
+  --sidebar-border: oklch(0.915 0.014 285);
+}
+
+.dark {
+  --background: oklch(0.13 0.022 275);
+  --foreground: oklch(0.96 0.01 280);
+  --card: oklch(0.175 0.026 276);
+  --card-foreground: oklch(0.96 0.01 280);
+  --popover: oklch(0.175 0.026 276);
+  --popover-foreground: oklch(0.96 0.01 280);
+  --primary: oklch(0.71 0.21 330);
+  --primary-foreground: oklch(0.14 0.025 320);
+  --secondary: oklch(0.23 0.028 276);
+  --secondary-foreground: oklch(0.93 0.012 280);
+  --muted: oklch(0.22 0.025 276);
+  --muted-foreground: oklch(0.69 0.024 276);
+  --accent: oklch(0.25 0.045 310);
+  --accent-foreground: oklch(0.95 0.015 310);
+  --destructive: oklch(0.64 0.22 25);
+  --destructive-foreground: oklch(0.98 0 0);
+  --border: oklch(0.27 0.028 276);
+  --input: oklch(0.27 0.028 276);
+  --ring: oklch(0.71 0.21 330);
+  --sidebar: oklch(0.155 0.025 276);
+  --sidebar-foreground: oklch(0.94 0.01 280);
+  --sidebar-border: oklch(0.25 0.026 276);
+}
+
+/* 将 CSS 变量映射为 Tailwind v4 主题语义 Token */
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-background text-foreground transition-colors duration-300;
+    font-family:
+      "Inter",
+      "PingFang SC",
+      "Hiragino Sans GB",
+      "Microsoft YaHei",
+      system-ui,
+      -apple-system,
+      sans-serif;
+  }
+
+  code,
+  pre,
+  textarea.font-mono,
+  input.font-mono {
+    font-family:
+      "JetBrains Mono",
+      "Fira Code",
+      "SFMono-Regular",
+      Menlo,
+      Monaco,
+      Consolas,
+      monospace;
+  }
+}
+
+/* =========================================================
+ * 自定义糖果动效与视觉特效工具类
+ * ========================================================= */
+
+/* 悬浮漂浮动画 */
+@keyframes candy-float {
+  0%,
+  100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-12px) rotate(2deg);
+  }
+}
+
+@keyframes candy-float-reverse {
+  0%,
+  100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(10px) rotate(-2deg);
+  }
+}
+
+/* 背景光晕呼吸流动动画 */
+@keyframes candy-aurora {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+    opacity: 0.65;
+  }
+  33% {
+    transform: translate(30px, -20px) scale(1.08);
+    opacity: 0.85;
+  }
+  66% {
+    transform: translate(-20px, 15px) scale(0.95);
+    opacity: 0.7;
+  }
+}
+
+/* 渐变流光文字动画 */
+@keyframes candy-gradient-shift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* 卡片入场弹跳渐显动画 */
+@keyframes candy-pop-in {
+  0% {
+    opacity: 0;
+    transform: translateY(16px) scale(0.97);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-candy-float {
+  animation: candy-float 6s ease-in-out infinite;
+}
+
+.animate-candy-float-reverse {
+  animation: candy-float-reverse 7s ease-in-out infinite;
+}
+
+.animate-candy-aurora {
+  animation: candy-aurora 12s ease-in-out infinite;
+}
+
+.animate-candy-gradient {
+  background-size: 200% 200%;
+  animation: candy-gradient-shift 6s ease infinite;
+}
+
+.animate-candy-pop {
+  animation: candy-pop-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* 糖果玻璃拟态卡片效果 */
+.candy-glass {
+  @apply bg-card/75 backdrop-blur-xl border border-border/70 shadow-sm;
+}
+
+/* 点阵网格背景装饰 */
+.candy-grid-bg {
+  background-image: radial-gradient(
+    circle at 1px 1px,
+    color-mix(in oklch, var(--foreground) 10%, transparent) 1px,
+    transparent 0
+  );
+  background-size: 24px 24px;
+}
+
+/* 路由切换过渡动画 */
+.page-fade-enter-active,
+.page-fade-leave-active {
+  transition:
+    opacity 0.22s ease,
+    transform 0.22s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.page-fade-enter-from {
+  opacity: 0;
+  transform: translateY(8px);
+}
+
+.page-fade-leave-to {
+  opacity: 0;
+  transform: translateY(-6px);
+}
+
+/* 自定义美观滚动条 */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: color-mix(in oklch, var(--muted-foreground) 30%, transparent);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in oklch, var(--muted-foreground) 55%, transparent);
+}
