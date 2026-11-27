@@ -2,6 +2,12 @@
 # GitHub Pages 自动构建与发布工作流
 # 当推送 v* 版本标签或手动触发时，自动执行单元测试、构建静态产物并部署到 GitHub Pages
 # ==============================================================================
+# ！todo：
+# 在 GitHub 仓库开启 Pages（关键步骤）
+# 打开仓库设置页面：https://github.com/teatang/candy-tool/settings/pages
+# 在 Build and deployment -> Source 下拉框中，选择 GitHub Actions（不要选 Deploy from a branch）。
+# 确认保存后，重新运行刚才失败的 Workflow（或再次推送 tag / 手动触发 Deploy to GitHub Pages）即可正常部署。
+# ==============================================================================
 
 name: Deploy to GitHub Pages
 
@@ -61,11 +67,16 @@ jobs:
       - name: 执行 Vitest 单元测试
         run: pnpm test
 
+      - name: 配置 GitHub Pages 站点信息
+        # 使用 v6 原生支持 Node.js 24 运行时；会自动校验 Pages 状态并输出部署路径 base_path
+        id: pages
+        uses: actions/configure-pages@v6
+
       - name: 类型检查与生产构建
         run: pnpm build
         env:
-          # 传入仓库名作为 Vite base 子路径（适配 username.github.io/candy-tool/）
-          BASE_PATH: ${{ github.event.repository.name }}
+          # 优先使用 configure-pages 输出的 base_path（兼容自定义域名与 github.io/candy-tool 子路径）
+          BASE_PATH: ${{ steps.pages.outputs.base_path }}
 
       - name: 生成 SPA 路由 404 回退页
         # GitHub Pages 不支持 Nginx try_files，复制 index.html 为 404.html 以支持前端 History 路由刷新
