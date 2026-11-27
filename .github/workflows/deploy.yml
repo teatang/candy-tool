@@ -73,7 +73,10 @@ jobs:
         uses: actions/configure-pages@v6
 
       - name: 类型检查与生产构建
-        run: pnpm build
+        run: |
+          echo "Pages URL: ${{ steps.pages.outputs.base_url }}"
+          echo "Pages Base Path: '${{ steps.pages.outputs.base_path }}'"
+          pnpm build
         env:
           # 优先使用 configure-pages 输出的 base_path（兼容自定义域名与 github.io/candy-tool 子路径）
           BASE_PATH: ${{ steps.pages.outputs.base_path }}
