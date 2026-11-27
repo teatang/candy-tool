@@ -1,0 +1,50 @@
+# ==============================================================================
+# 持续集成质量检查工作流 (CI)
+# 在推送代码到主分支或发起 Pull Request 时自动运行单元测试、类型检查与构建验证
+# ==============================================================================
+
+name: CI Check
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+    branches:
+      - main
+      - master
+
+# 并发控制：同一 PR 或分支有新提交时自动取消旧的未完成 CI 任务，节省运行资源
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Test & Build Verification
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 检出仓库代码
+        uses: actions/checkout@v4
+
+      - name: 安装 pnpm 包管理器
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: 安装 Node.js 并启用 pnpm 缓存
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'pnpm'
+
+      - name: 严格按锁文件安装依赖
+        run: pnpm install --frozen-lockfile
+
+      - name: 执行 Vitest 单元测试
+        run: pnpm test
+
+      - name: 执行 TypeScript 类型检查与 Vite 构建验证
+        run: pnpm build

@@ -1,58 +1,93 @@
+# ==============================================================================
+# GitHub Pages 自动构建与发布工作流
+# 当推送 v* 版本标签或手动触发时，自动执行单元测试、构建静态产物并部署到 GitHub Pages
+# ==============================================================================
+
 name: Deploy to GitHub Pages
 
 on:
   push:
+    # 仅在推送以 v 开头的版本标签（如 v1.0.0）时触发发布
     tags:
       - 'v*'
+  # 支持在 GitHub Actions 页面手动点击 "Run workflow" 触发
   workflow_dispatch:
 
+# 配置 GitHub Actions Token 最小必要权限
 permissions:
+  # 读取仓库源码权限
   contents: read
+  # 发布 GitHub Pages 站点权限
   pages: write
+  # 生成 OIDC 身份令牌，用于 GitHub Pages 官方安全认证
   id-token: write
 
+# 并发控制：同一时间仅允许一个 Pages 部署任务运行，避免旧构建覆盖新发布
 concurrency:
-  group: "pages"
+  group: 'pages'
+  # 不取消正在进行中的部署，确保线上站点发布过程原子完整
   cancel-in-progress: false
 
 jobs:
+  # ----------------------------------------------------------------------------
+  # 任务 1：安装依赖、执行单元测试并构建前端静态产物
+  # ----------------------------------------------------------------------------
   build:
+    name: Build & Test
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout
+      - name: 检出仓库代码
         uses: actions/checkout@v4
 
-      - name: Setup pnpm
+      - name: 安装 pnpm 包管理器
         uses: pnpm/action-setup@v4
         with:
-          version: 9
+          # 与本地 pnpm-lock.yaml 保持主版本一致
+          version: 10
 
-      - name: Setup Node.js
+      - name: 安装 Node.js 并启用 pnpm 依赖缓存
         uses: actions/setup-node@v4
         with:
-          node-version: 20
-          cache: pnpm
+          node-version: 22
+          cache: 'pnpm'
 
-      - name: Install dependencies
-        run: pnpm install
+      - name: 严格按锁文件安装依赖
+        run: pnpm install --frozen-lockfile
 
-      - name: Build
+      - name: 执行 Vitest 单元测试
+        run: pnpm test
+
+      - name: 类型检查与生产构建
         run: pnpm build
         env:
+          # 传入仓库名作为 Vite base 子路径（适配 username.github.io/candy-tool/）
           BASE_PATH: ${{ github.event.repository.name }}
 
-      - name: Upload artifact
+      - name: 生成 SPA 路由 404 回退页
+        # GitHub Pages 不支持 Nginx try_files，复制 index.html 为 404.html 以支持前端 History 路由刷新
+        run: cp dist/index.html dist/404.html
+
+      - name: 上传 GitHub Pages 构建产物
         uses: actions/upload-pages-artifact@v3
         with:
           path: dist
 
+  # ----------------------------------------------------------------------------
+  # 任务 2：将构建产物正式发布至 GitHub Pages 环境
+  # ----------------------------------------------------------------------------
   deploy:
+    name: Deploy to Pages
+    # 必须等待 build 任务完全成功后才执行部署
     needs: build
     runs-on: ubuntu-latest
+
+    # 声明部署目标环境，并在工作流详情页直接展示访问链接
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
+
     steps:
-      - name: Deploy to GitHub Pages
+      - name: 部署静态站点到 GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4

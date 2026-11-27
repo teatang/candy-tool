@@ -1,27 +1,104 @@
+# ==============================================================================
+# Docker 镜像自动构建与推送工作流
+# 当推送 v* 版本标签或手动触发时，先验证测试通过，再多架构构建并推送至 Docker Hub
+# ==============================================================================
+
 name: Image Push to DockerHub
 
 on:
   push:
+    # 仅在推送以 v 开头的语义化版本标签（如 v1.0.1）时自动触发发版
     tags:
       - 'v*'
-  workflow_dispatch: # 允许手动触发此工作流
+  # 允许在 GitHub Actions 界面手动触发构建
+  workflow_dispatch:
+
+# 并发控制：相同分支或标签的新触发会排队等待，避免同时推送造成标签覆盖混乱
+concurrency:
+  group: docker-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
-  push-docker-hub:
-    runs-on: ubuntu-latest # 使用最新的 Ubuntu 虚拟机运行此任务
+  # ----------------------------------------------------------------------------
+  # 任务 1：前置质量门禁（运行单元测试与类型构建检查）
+  # ----------------------------------------------------------------------------
+  test:
+    name: Run Tests Before Docker Build
+    runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository # 步骤1: 检出代码
+      - name: 检出仓库代码
         uses: actions/checkout@v4
 
-      - name: 登录DockerHub # 步骤2: 登录DockerHub
-        uses: docker/login-action@v3 # 使用最新版本的 docker/login-action
+      - name: 安装 pnpm 包管理器
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: 安装 Node.js 并启用 pnpm 缓存
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'pnpm'
+
+      - name: 安装项目依赖
+        run: pnpm install --frozen-lockfile
+
+      - name: 运行 Vitest 单元测试
+        run: pnpm test
+
+  # ----------------------------------------------------------------------------
+  # 任务 2：多平台构建 Docker 镜像并推送到 Docker Hub
+  # ----------------------------------------------------------------------------
+  push-docker-hub:
+    name: Build & Push Docker Image
+    # 测试全部通过后再构建镜像，防止将缺陷版本推送至镜像仓库
+    needs: test
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    steps:
+      - name: 检出仓库代码
+        uses: actions/checkout@v4
+
+      - name: 配置 QEMU 多架构模拟器
+        # 支持在 x86_64 Runner 上同时构建 amd64 与 arm64 (Apple Silicon / ARM 服务器) 镜像
+        uses: docker/setup-qemu-action@v3
+
+      - name: 初始化 Docker Buildx 构建器
+        # 启用 BuildKit 高级特性（多平台构建与 GitHub Actions 层缓存）
+        uses: docker/setup-buildx-action@v3
+
+      - name: 登录 Docker Hub
+        uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_TOKEN }}
 
-      - name: 构建并推送Docker Hub # 步骤3: 构建并推送镜像到 Docker Hub
-        uses: docker/build-push-action@v5
+      - name: 自动生成镜像标签与 OCI 元数据
+        id: meta
+        uses: docker/metadata-action@v5
         with:
-          push: true # 推送镜像到 Docker Hub
-          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/candy-tool:latest # 镜像标签
+          images: ${{ secrets.DOCKER_HUB_USERNAME }}/candy-tool
+          tags: |
+            # 推送 v1.2.3 标签时自动生成 1.2.3、1.2 与 latest 标签
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            # 推送 v* 标签或手动触发时附加 latest 标签
+            type=raw,value=latest,enable=${{ startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch' }}
 
+      - name: 构建并推送多架构镜像至 Docker Hub
+        uses: docker/build-push-action@v6
+        with:
+          # 构建上下文为仓库根目录（使用根目录的 Dockerfile 与 nginx.conf）
+          context: .
+          # 同时构建主流服务器 (amd64) 与 ARM 架构 (arm64) 镜像
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          # 启用 GitHub Actions 缓存，显著加速后续构建速度
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
