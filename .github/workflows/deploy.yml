@@ -38,16 +38,19 @@ jobs:
 
     steps:
       - name: 检出仓库代码
-        uses: actions/checkout@v4
+        # 使用 v6 原生支持 Node.js 24 运行时
+        uses: actions/checkout@v6
 
       - name: 安装 pnpm 包管理器
-        uses: pnpm/action-setup@v4
+        # 使用 v5 原生支持 Node.js 24 运行时，避免 Node 20 弃用警告
+        uses: pnpm/action-setup@v5
         with:
           # 与本地 pnpm-lock.yaml 保持主版本一致
           version: 10
 
       - name: 安装 Node.js 并启用 pnpm 依赖缓存
-        uses: actions/setup-node@v4
+        # 使用 v6 原生支持 Node.js 24 运行时
+        uses: actions/setup-node@v6
         with:
           node-version: 22
           cache: 'pnpm'
@@ -69,7 +72,8 @@ jobs:
         run: cp dist/index.html dist/404.html
 
       - name: 上传 GitHub Pages 构建产物
-        uses: actions/upload-pages-artifact@v3
+        # 使用 v4 原生支持 Node.js 24 运行时
+        uses: actions/upload-pages-artifact@v4
         with:
           path: dist
 
@@ -90,4 +94,5 @@ jobs:
     steps:
       - name: 部署静态站点到 GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4
+        # 使用 v5 原生支持 Node.js 24 运行时
+        uses: actions/deploy-pages@v5
