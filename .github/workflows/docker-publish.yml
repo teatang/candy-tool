@@ -1,0 +1,27 @@
+name: Image Push to DockerHub
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch: # 允许手动触发此工作流
+jobs:
+  push-docker-hub:
+    runs-on: ubuntu-latest # 使用最新的 Ubuntu 虚拟机运行此任务
+
+    steps:
+      - name: Checkout repository # 步骤1: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 登录DockerHub # 步骤2: 登录DockerHub
+        uses: docker/login-action@v3 # 使用最新版本的 docker/login-action
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_TOKEN }}
+
+      - name: 构建并推送Docker Hub # 步骤3: 构建并推送镜像到 Docker Hub
+        uses: docker/build-push-action@v5
+        with:
+          push: true # 推送镜像到 Docker Hub
+          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/candy-tool:latest # 镜像标签
+
