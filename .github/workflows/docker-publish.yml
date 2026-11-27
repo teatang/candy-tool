@@ -63,6 +63,16 @@ jobs:
       contents: read
 
     steps:
+      - name: 检查 Docker Hub 密钥配置
+        env:
+          DOCKER_USER: ${{ secrets.DOCKER_HUB_USERNAME }}
+          DOCKER_TOKEN: ${{ secrets.DOCKER_HUB_TOKEN }}
+        run: |
+          if [ -z "$DOCKER_USER" ] || [ -z "$DOCKER_TOKEN" ]; then
+            echo "::error::缺少 Docker Hub 凭据！请在 GitHub 仓库 Settings -> Secrets and variables -> Actions -> Repository secrets 中添加 DOCKER_HUB_USERNAME 和 DOCKER_HUB_TOKEN。"
+            exit 1
+          fi
+
       - name: 检出仓库代码
         uses: actions/checkout@v6
 
